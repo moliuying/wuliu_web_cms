@@ -1,0 +1,40 @@
+{
+  "name": "coin_robot_cms_server",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "start": "node bin/www",
+    "dev": "export NODE_ENV='development' && nodemon  bin/www",
+    "prd": "export NODE_ENV='production' && nodemon  bin/www",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "compressing": "^1.5.0",
+    "debug": "^2.6.3",
+    "dx-captcha-sdk": "^0.1.0",
+    "esdk-obs-nodejs": "^3.1.3",
+    "gaze": "^1.1.3",
+    "koa": "^2.2.0",
+    "koa-body": "^4.1.1",
+    "koa-bodyparser": "^3.2.0",
+    "koa-convert": "^1.2.0",
+    "koa-json": "^2.0.2",
+    "koa-logger": "^2.0.1",
+    "koa-onerror": "^1.2.1",
+    "koa-router": "^7.1.1",
+    "koa-session": "^5.12.2",
+    "koa-static": "^5.0.0",
+    "koa-views": "^5.2.1",
+    "koa2-cors": "^2.0.6",
+    "moment": "^2.24.0",
+    "mongoose": "^5.9.10",
+    "mysql": "^2.17.1",
+    "mysql2": "^1.6.5",
+    "node-xlsx": "^0.15.0",
+    "pug": "^2.0.0-rc.1",
+    "ssh2-sftp-client": "^2.5.0"
+  },
+  "devDependencies": {
+    "nodemon": "^1.8.1"
+  }
+}
