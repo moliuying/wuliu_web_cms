@@ -26,7 +26,7 @@ app.use(cors(
     {
         origin:function (ctx) {
             let origin = ctx.request.headers.origin || '';
-            const allowedOrigins = ['http://114.116.245.61:8080', 'http://43.140.245.169:8080', 'http://localhost:8080', 'http://localhost:8083'];
+            const allowedOrigins = ['http://114.116.245.61:8080', 'http://43.140.245.169:8080', 'http://localhost:8080', 'http://localhost:8081', 'http://localhost:8082', 'http://localhost:8083'];
             if ( allowedOrigins.includes(origin)  ) {
                 return origin
             } else {

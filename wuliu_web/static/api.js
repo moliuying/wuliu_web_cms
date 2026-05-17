@@ -26,5 +26,10 @@ let API_URL = {
     get_quotation_list: "/index/get_quotation_list",
     get_quotation_by_params: "/index/get_quotation_by_params",
     del_quotation_info: "/index/del_quotation_info",
+
+    //订单锁定
+    lock_order: "/index/lock_order",
+    unlock_order: "/index/unlock_order",
+    get_lock_info: "/index/get_lock_info",
 }
 

@@ -7,7 +7,13 @@ const userSchema = Mongoose.Schema({
     data: Mongoose.Schema.Types.Mixed,
     createAt:{required: true, type: Date},
     updateAt:{required: true, type: Date},
-    is_delete:{ required: true, type: Boolean, default: false}
+    is_delete:{ required: true, type: Boolean, default: false},
+    lock_info: {
+        locked_by: { type: o_id, ref: 'users', default: null },
+        locked_by_name: { type: String, default: '' },
+        locked_at: { type: Date, default: null },
+        is_locked: { type: Boolean, default: false }
+    }
 })
 
 //每次执行都会调用,时间更新操作

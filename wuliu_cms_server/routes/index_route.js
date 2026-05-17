@@ -60,6 +60,21 @@ router.post("/del_info",
 );
 
 
+//锁定订单
+router.post("/lock_order",
+    index_control.lock_order
+);
+
+//解锁订单
+router.post("/unlock_order",
+    index_control.unlock_order
+);
+
+//获取订单锁定信息
+router.get("/get_lock_info",
+    index_control.get_lock_info
+);
+
 // //测试1
 router.get("/test",
     index_control.test

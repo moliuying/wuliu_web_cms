@@ -108,7 +108,7 @@ CommonService.prototype.FindByIdAndUpdate = function(obj) {
     let _id = obj._id;
     delete obj._id;
     obj.update_time = Date.now();
-    return this.model.findByIdAndUpdate(_id, obj).exec();
+    return this.model.findByIdAndUpdate(_id, obj, { new: true }).exec();
 };
 /**
  * 找到一个并更新

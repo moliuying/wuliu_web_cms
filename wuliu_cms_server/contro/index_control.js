@@ -98,7 +98,8 @@ module.exports = {
                 is_delete: false,
             };
             let sortQuery = {
-                _id:-1
+                "data.priority": -1,
+                createAt: -1
             }
             if( search_value ){
                 query["$or"] = [ {"data.waybill_number":{"$regex": search_value,"$options": 'i'}},{"data.dingdan_num":{"$regex": search_value,"$options": 'i'}}]
@@ -216,6 +217,11 @@ module.exports = {
             
             console.log("------",_id)
             if(_id){
+                let order = await Info_service.FindById({ _id });
+                if (order && order.lock_info && order.lock_info.is_locked && order.lock_info.locked_by.toString() !== ctx.session.user_info._id.toString()) {
+                    ctx.body = G_Tools.GetRESTFulAPIErrorMsgBack(-1, `订单正在被 ${order.lock_info.locked_by_name} 编辑中，无法修改`);
+                    return;
+                }
                 //    更新
                 //查询上一次是什么状态
                 let prev_info_detail = await Info_service.FindById({_id });
@@ -308,6 +314,94 @@ module.exports = {
                 key: key,
                 // src: yuming+file_key+'?x-image-process=image/resize,w_100,h_100/quality,q_80'
                 src:  (type == "jpeg" || type == "jpg" || type == "png") ? yuming+file_key+'?x-image-process=image/quality,q_50': yuming+file_key
+            });
+        } catch (e) {
+            throw e;
+        }
+    },
+    lock_order: async (ctx, next) => {
+        try {
+            let { _id } = ctx.request.body;
+            if (!ctx.session.user_info) {
+                ctx.body = G_Tools.GetRESTFulAPIErrorMsgBack(-100, "请先登录");
+                return;
+            }
+            let order = await Info_service.FindById({ _id });
+            if (!order) {
+                ctx.body = G_Tools.GetRESTFulAPIErrorMsgBack(-1, "订单不存在");
+                return;
+            }
+            if (order.lock_info && order.lock_info.is_locked && order.lock_info.locked_by.toString() !== ctx.session.user_info._id.toString()) {
+                ctx.body = G_Tools.GetRESTFulAPICorrectMsgBack(1, {
+                    success: false,
+                    lock_info: order.lock_info
+                });
+                return;
+            }
+            let result_data = await Info_service.FindByIdAndUpdate({
+                _id: _id,
+                lock_info: {
+                    is_locked: true,
+                    locked_by: ctx.session.user_info._id,
+                    locked_by_name: ctx.session.user_info.user_name,
+                    locked_at: new Date()
+                },
+                updateAt: Date.now()
+            });
+            ctx.body = G_Tools.GetRESTFulAPICorrectMsgBack(1, {
+                success: true,
+                lock_info: result_data.lock_info
+            });
+        } catch (e) {
+            throw e;
+        }
+    },
+    unlock_order: async (ctx, next) => {
+        try {
+            let { _id } = ctx.request.body;
+            if (!ctx.session.user_info) {
+                ctx.body = G_Tools.GetRESTFulAPIErrorMsgBack(-100, "请先登录");
+                return;
+            }
+            let order = await Info_service.FindById({ _id });
+            if (!order) {
+                ctx.body = G_Tools.GetRESTFulAPIErrorMsgBack(-1, "订单不存在");
+                return;
+            }
+            if (order.lock_info && order.lock_info.locked_by && order.lock_info.locked_by.toString() !== ctx.session.user_info._id.toString()) {
+                ctx.body = G_Tools.GetRESTFulAPIErrorMsgBack(-1, "只有锁定者可以解锁");
+                return;
+            }
+            let result_data = await Info_service.FindByIdAndUpdate({
+                _id: _id,
+                lock_info: {
+                    is_locked: false,
+                    locked_by: null,
+                    locked_by_name: '',
+                    locked_at: null
+                },
+                updateAt: Date.now()
+            });
+            ctx.body = G_Tools.GetRESTFulAPICorrectMsgBack(1, {
+                success: true
+            });
+        } catch (e) {
+            throw e;
+        }
+    },
+    get_lock_info: async (ctx, next) => {
+        try {
+            let { _id } = ctx.request.query;
+            let order = await Info_service.FindById({ _id });
+            if (!order) {
+                ctx.body = G_Tools.GetRESTFulAPIErrorMsgBack(-1, "订单不存在");
+                return;
+            }
+            ctx.body = G_Tools.GetRESTFulAPICorrectMsgBack(1, order.lock_info || {
+                is_locked: false,
+                locked_by: null,
+                locked_by_name: '',
+                locked_at: null
             });
         } catch (e) {
             throw e;

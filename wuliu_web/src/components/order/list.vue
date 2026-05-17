@@ -53,6 +53,11 @@
         </div>
         <Row style="height: 100%;">
             <Table border stripe :loading="loading" :columns="tableHead" :data="tableData" @on-sort-change="sortTable">
+                <template slot-scope="{ row }" slot="priority">
+                    <Tag v-if="row.data.priority == 2" color="red">紧急</Tag>
+                    <Tag v-else-if="row.data.priority == 1" color="orange">高</Tag>
+                    <Tag v-else color="default">普通</Tag>
+                </template>
                 <template slot-scope="{ row }" slot="invoice_nmuber">
                     {{ row.data.invoice_nmuber }}
                 </template>
@@ -163,6 +168,14 @@
                 updateAt_sort: null,
                 createAt_sort: null,
                 tableHead: [
+                    {
+                        title: '优先级',
+                        key: 'priority',
+                        align: 'center',
+                        slot: 'priority',
+                        width: 100
+                    }
+                    ,
                     {
                         title: 'INVOICE NUMBER',
                         key: 'invoice_nmuber',

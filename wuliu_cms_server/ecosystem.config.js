@@ -10,11 +10,11 @@ module.exports = {
       max_memory_restart: '500M',      // 内存超过限制自动重启
       env: {
         NODE_ENV: 'development',       // 开发环境变量
-        PORT: 3333
+        PORT: 3334
       },
       env_production: {
         NODE_ENV: 'production',        // 生产环境变量
-        PORT: 3333
+        PORT: 3334
       },
       error_file: './logs/err.log',    // 错误日志文件
       out_file: './logs/out.log',      // 输出日志文件
