@@ -28,10 +28,11 @@
                 <Form ref="formValidate" :model="form_data" :rules="rule_data" :label-width="240">
                     <FormItem label="订单优先级 - order priority" prop="priority">
                         <Select v-model="form_data.priority" :disabled="is_readonly" style="width: 200px;">
-                            <Option :value="2">紧急</Option>
-                            <Option :value="1">高</Option>
+                            <Option v-if="is_admin" :value="2">紧急</Option>
+                            <Option v-if="is_admin" :value="1">高</Option>
                             <Option :value="0">普通</Option>
                         </Select>
+                        <span v-if="!is_admin" style="color: #999; margin-left: 10px;">（仅管理员可设置高优先级）</span>
                     </FormItem>
                     <FormItem label="订单备注 - order remark" prop="shipping_method">
                         <Input v-model=" form_data.order_mark " type="textarea" :autosize="{minRows: 2,maxRows: 5}"
@@ -246,8 +247,25 @@
                         Order Details 订单信息
                     </div>
                     <Form ref="formValidate" :model="form_data" :rules="rule_data" :label-width="240">
-                        <FormItem label="Client Name - 客户名称" prop="kehu_name">
-                            <Input v-model="form_data.kehu_name" placeholder="Enter Client Name" :disabled="is_readonly"></Input>
+                        <FormItem label="Client Name - 客户名称" prop="customer_id">
+                            <Select v-model="form_data.customer_id" placeholder="Select Customer" @on-change="change_customer_select" :disabled="is_readonly" style="width: 100%;" :clearable="true">
+                                <Option v-for="item in customer_list" :value="item._id" :key="item._id">
+                                    {{ item.company_name }} - {{ item.contact_name }} ({{ item.email }})
+                                </Option>
+                            </Select>
+                        </FormItem>
+                        <FormItem v-if="selected_customer" label="客户信息">
+                            <div style="background: #f8f8f9; padding: 10px; border-radius: 4px;">
+                                <p><strong>公司:</strong> {{ selected_customer.company_name }}</p>
+                                <p><strong>联系人:</strong> {{ selected_customer.contact_name }}</p>
+                                <p><strong>邮箱:</strong> {{ selected_customer.email }}</p>
+                                <p><strong>电话:</strong> {{ selected_customer.phone || '-' }}</p>
+                                <p><strong>信用评级:</strong> 
+                                    <Icon v-for="i in 5" :key="i" type="ios-star" :size="16"
+                                          :color="i <= selected_customer.credit_rating ? '#f5a623' : '#e0e0e0'"></Icon>
+                                </p>
+                                <p><strong>历史订单:</strong> {{ selected_customer.total_orders || 0 }} 单</p>
+                            </div>
                         </FormItem>
                         <FormItem label="Job ID - 订单编号" prop="dingdan_num" v-if="form_data._id">
                             <Input v-model="form_data._id" placeholder="Enter Job ID" disabled></Input>
@@ -516,6 +534,8 @@
                 is_readonly: false,
                 is_locked_by_me: false,
                 current_user_id: '',
+                is_admin: false,
+                original_priority: 0,
                 action_url: process.env.NODE_ENV == 'development' ? 'http://localhost:3333/index/upfile' : 'http://43.140.245.169:3333/index/upfile',
                 form_search: {
                     value: ''
@@ -537,6 +557,7 @@
                     shoujian_youbian: '',
                     other: '',
 
+                    customer_id: '',
                     kehu_name: '',
                     dingdan_num: '',
                     lots: [
@@ -590,7 +611,9 @@
                     //     {type: 'string', min: 6, message: '密码不能少于6位', trigger: 'blur'}
                     // ]
                 },
-                receive_list: []
+                receive_list: [],
+                customer_list: [],
+                selected_customer: null
             }
         },
         mounted() {
@@ -599,8 +622,11 @@
                     this.form_data[key] = this.$route.params[key];
                 }
             }
+            this.is_admin = localStorage.getItem('is_admin') === 'true';
+            this.original_priority = this.form_data.priority || 0;
             this.current_user_id = this.$store.state.user_info ? this.$store.state.user_info._id : '';
             this.get_receive_list();
+            this.get_customer_list();
             this.get_info_status_list();
             if (this.form_data._id) {
                 this.tryLockOrder();
@@ -698,6 +724,38 @@
                     this.$router.push({name: 'login'})
                 })
             },
+            get_customer_list() {
+                this.Ajax.get(API_URL.get_customer_all, {
+                    params: {}
+                }).then((ret) => {
+                    if (ret) {
+                        this.customer_list = ret.DATA;
+                        if (this.form_data.customer_id) {
+                            let customer = this.customer_list.find(c => c._id === this.form_data.customer_id);
+                            if (customer) {
+                                this.selected_customer = customer;
+                                this.form_data.kehu_name = customer.company_name;
+                            }
+                        }
+                    }
+                    this.loading = false;
+                }).catch(() => {
+                    this.$Message.error("请重新登录");
+                    this.$router.push({name: 'login'})
+                })
+            },
+            change_customer_select(customer_id) {
+                if (!customer_id) {
+                    this.selected_customer = null;
+                    this.form_data.kehu_name = '';
+                    return;
+                }
+                let customer = this.customer_list.find(c => c._id === customer_id);
+                if (customer) {
+                    this.selected_customer = customer;
+                    this.form_data.kehu_name = customer.company_name;
+                }
+            },
             oepn_link(link) {
                 window.open(link)
             },
@@ -726,6 +784,21 @@
                 if (this.is_readonly) {
                     this.$Message.error("只读模式下无法提交");
                     return;
+                }
+                if (!this.is_admin) {
+                    if (this.form_data._id) {
+                        if (this.form_data.priority !== this.original_priority) {
+                            this.$Message.error("您没有权限修改订单优先级");
+                            this.form_data.priority = this.original_priority;
+                            return;
+                        }
+                    } else {
+                        if (this.form_data.priority > 0) {
+                            this.$Message.error("您没有权限设置高优先级，已自动重置为普通");
+                            this.form_data.priority = 0;
+                            return;
+                        }
+                    }
                 }
                 this.form_data["status"] = status;
                 this.Ajax.post(API_URL.submit_data, this.form_data).then(async (ret) => {

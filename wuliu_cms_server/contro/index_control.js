@@ -8,6 +8,7 @@ const mongoose = require('mongoose');
 let Info_service= require("../servers/info_servers");
 let quotationInfo_service= require("../servers/quotation_servers");
 let Info_status_service= require("../servers/info_status_service");
+let customer_control = require("./customer_control");
 
 
 
@@ -101,6 +102,7 @@ module.exports = {
                 "data.priority": -1,
                 createAt: -1
             }
+            let custom_sort = null;
             if( search_value ){
                 query["$or"] = [ {"data.waybill_number":{"$regex": search_value,"$options": 'i'}},{"data.dingdan_num":{"$regex": search_value,"$options": 'i'}}]
             }
@@ -119,23 +121,22 @@ module.exports = {
             }
             
             if(paimai_huozhi_sort){
-                sortQuery = {
-                    "data.paimai_huozhi": +paimai_huozhi_sort
-                }
+                custom_sort = { "data.paimai_huozhi": +paimai_huozhi_sort }
             }
             if(paimai_date_sort){
-                sortQuery = {
-                    "data.paimai_date": +paimai_date_sort
-                }
+                custom_sort = { "data.paimai_date": +paimai_date_sort }
             }
             if(createAt_sort){
-                sortQuery = {
-                    "createAt": +createAt_sort
-                }
+                custom_sort = { "createAt": +createAt_sort }
             }
             if(updateAt_sort){
+                custom_sort = { "updateAt": +updateAt_sort }
+            }
+            
+            if(custom_sort){
                 sortQuery = {
-                    "updateAt": +updateAt_sort
+                    "data.priority": -1,
+                    ...custom_sort
                 }
             }
             console.log(sortQuery)
@@ -215,6 +216,22 @@ module.exports = {
             let data = ctx.request.body;
             let { _id } = data;
             
+            if (!ctx.session.user_info.is_admin) {
+                if (_id) {
+                    let existing_order = await Info_service.FindById({ _id });
+                    let existing_priority = existing_order && existing_order.data && existing_order.data.priority !== undefined ? existing_order.data.priority : 0;
+                    if ((data.priority || 0) !== existing_priority) {
+                        ctx.body = G_Tools.GetRESTFulAPIErrorMsgBack(-1, "您没有权限修改订单优先级");
+                        return;
+                    }
+                } else {
+                    if (data.priority > 0) {
+                        ctx.body = G_Tools.GetRESTFulAPIErrorMsgBack(-1, "您没有权限设置高优先级");
+                        return;
+                    }
+                }
+            }
+            
             console.log("------",_id)
             if(_id){
                 let order = await Info_service.FindById({ _id });
@@ -264,6 +281,11 @@ module.exports = {
                         status: 0
                     }
                 )
+                
+                if (data.customer_id) {
+                    let amount = parseFloat(data.total) || 0;
+                    customer_control.update_order_stats(data.customer_id, amount);
+                }
                 
                 ctx.body = G_Tools.GetRESTFulAPICorrectMsgBack(1, result_data);
             }

@@ -31,5 +31,13 @@ let API_URL = {
     lock_order: "/index/lock_order",
     unlock_order: "/index/unlock_order",
     get_lock_info: "/index/get_lock_info",
+
+    //客户管理
+    create_customer: "/customer/create",
+    update_customer: "/customer/update",
+    get_customer_list: "/customer/get_list",
+    get_customer_all: "/customer/get_all",
+    get_customer_detail: "/customer/get_detail",
+    del_customer: "/customer/del",
 }
 

@@ -3,6 +3,7 @@ let router = new Router();
 let user_router = require("./user_route");
 let index_router = require("./index_route");
 let reciver_router = require("./reciver_route");
+let customer_router = require("./customer_route");
 
 
 router.use(async (ctx, next) => {
@@ -13,5 +14,6 @@ router.use(async (ctx, next) => {
 router.use("/user", user_router);
 router.use("/index", index_router);
 router.use("/reciver", reciver_router);
+router.use("/customer", customer_router);
 module.exports = router.routes();
 

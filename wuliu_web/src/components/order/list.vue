@@ -44,6 +44,12 @@
                     </Button>
 
                     <Button type="primary" @click=" $router.push({
+                    name:'customer_list',
+                    params: ''
+                    } ) ">客户管理
+                    </Button>
+
+                    <Button type="primary" @click=" $router.push({
                     name:'detail',
                     params: ''
                     } )">创建新订单

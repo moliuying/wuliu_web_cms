@@ -66,7 +66,13 @@ export default new Router({
                     name:"use_list",
                     path: '/use_list',
                     component: require('@/components/order/use_list.vue').default,
-                    meta: ["用户管理"]
+                    meta: ["收件人管理"]
+                },
+                {
+                    name:"customer_list",
+                    path: '/customer_list',
+                    component: require('@/components/customer/list.vue').default,
+                    meta: ["客户管理"]
                 },
                 {
                     name:"quotation_list",

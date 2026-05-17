@@ -68,6 +68,7 @@
                                 localStorage.setItem('username',ret.DATA.user_name);
                                 localStorage.setItem('userinfo', JSON.stringify(ret.DATA));
                                 localStorage.setItem('uid',ret.DATA.id);
+                                localStorage.setItem('is_admin', ret.DATA.is_admin ? 'true' : 'false');
                                 // localStorage.setItem('refuse_path',"list")
                                 // this.$store.commit('get_refuse_path');
                                 this.$router.push('/');
