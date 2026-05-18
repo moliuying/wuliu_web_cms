@@ -39,6 +39,11 @@ router.post("/del_quotation_info",
     index_control.del_quotation_info
 );
 
+// 导出报价单PDF
+router.get("/export_quotation_pdf",
+    index_control.export_quotation_pdf
+);
+
 
 //获取状态数据
 router.post("/get_status_list",

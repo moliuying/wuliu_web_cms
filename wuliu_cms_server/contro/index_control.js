@@ -8,6 +8,7 @@ const mongoose = require('mongoose');
 let Info_service= require("../servers/info_servers");
 let quotationInfo_service= require("../servers/quotation_servers");
 let Info_status_service= require("../servers/info_status_service");
+let PdfService = require("../servers/pdf_service");
 
 
 
@@ -319,5 +320,28 @@ module.exports = {
         console.log("query",ctx.request.query);
         console.log("body",ctx.request.body);
         ctx.body = G_Tools.GetRESTFulAPICorrectMsgBack(1, "res data");
+    },
+    export_quotation_pdf: async (ctx, next) => {
+        try {
+            let { _id } = ctx.request.query;
+            if (!_id) {
+                ctx.body = G_Tools.GetRESTFulAPICorrectMsgBack(0, "Missing quotation ID");
+                return;
+            }
+            let quotation = await quotationInfo_service.FindById({ _id });
+            if (!quotation) {
+                ctx.body = G_Tools.GetRESTFulAPICorrectMsgBack(0, "Quotation not found");
+                return;
+            }
+            let pdfBuffer = await PdfService.generateQuotationPdf(quotation);
+            let fileName = `Quotation_${quotation.auction_ref}_${moment().format('YYYYMMDD')}.pdf`;
+            ctx.set('Content-Type', 'application/pdf');
+            ctx.set('Content-Disposition', `attachment; filename="${fileName}"`);
+            ctx.set('Content-Length', pdfBuffer.length);
+            ctx.body = pdfBuffer;
+        } catch (e) {
+            console.error("Export PDF error:", e);
+            ctx.body = G_Tools.GetRESTFulAPICorrectMsgBack(0, "Export PDF failed");
+        }
     }
 }
